@@ -169,7 +169,7 @@ function checkWin(currow,curcol){
     
     //console.log(crow+ccol+'-'+GRID_LENGTH-1);
 
-    if(crow+ccol===GRID_LENGTH-1){
+    if((crow+ccol)===(GRID_LENGTH-1)){
         gameWon = true;
         for(let r=0;r<GRID_LENGTH;r++){
             if(grid[r][GRID_LENGTH-1-r]!==playerValue){
