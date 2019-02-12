@@ -18,18 +18,8 @@
 */
 
 let grid = [];
-const GRID_LENGTH = 3;
+const GRID_LENGTH = 5;
 let turn = 'X';
-const winningCombos = [
-    [0, 1, 2],
-	[3, 4, 5],
-	[6, 7, 8],
-	[0, 3, 6],
-	[1, 4, 7],
-	[2, 5, 8],
-	[0, 4, 8],
-    [6, 4, 2]
-];
 
 
 /**
@@ -110,59 +100,104 @@ function renderMainGrid() {
  * Handles the box click event
  */
 function onBoxClick() {
-    var rowIdx = this.getAttribute("rowIdx");
-    var colIdx = this.getAttribute("colIdx");
+    var rowIdx = Number(this.getAttribute("rowIdx"));
+    var colIdx = Number(this.getAttribute("colIdx"));
     if(grid[colIdx][rowIdx]===0){
         let newValue = 1;
         turn = 'X';
         grid[colIdx][rowIdx] = newValue;
-        let gameWon = checkWin();
+        //console.log(typeof colIdx+'-'+rowIdx);
+        let gameWon = checkWin(colIdx,rowIdx);
         renderMainGrid();
-        if(gameWon)  gameOver(gameWon);
+        if(gameWon)  gameOver();
         else{
             if(!gameTie()){
                 turn = 'O';
                 newValue = 2;
                 let ids = getBestBox();
+                //console.log(ids);
                 grid[ids.colIdx][ids.rowIdx] = newValue;
-                let gameWon = checkWin();
+                let gameWon = checkWin(ids.colIdx,ids.rowIdx);
                 renderMainGrid();
-                if(gameWon)  gameOver(gameWon);
+                if(gameWon)  gameOver();
                 else addClickHandlers();
             }
         }
     }
 }
 
-function checkWin(){
+/**
+ * checks if any one of the player won or not
+ */
+function checkWin(currow,curcol){
+    let crow= Number(currow);
+    let ccol = Number(curcol);
     let playerValue = turn==='X'? 1:2;
-    let copyGrid = [...grid[0],...grid[1],...grid[2]];
-    let playedBoxes = copyGrid.reduce(
-        (a,e,i)=> (e===playerValue)?a.concat(i):a,[]
-        );
-    let gameWon=null;
-    for(let [index,win] of winningCombos.entries()){
-        if(win.every(elem=>playedBoxes.indexOf(elem)>-1)) {
-            gameWon = {index: index,turn:turn};
+    let gameWon = true;
+    for(let col=0;col<GRID_LENGTH;col++){
+        if(grid[crow][col]!==playerValue){
+            gameWon = false;
             break;
+        }
+    }
+    if(gameWon){
+        return gameWon;
+    }
+    gameWon = true;
+    for(let row=0;row<GRID_LENGTH;row++){
+        if(grid[row][ccol]!==playerValue){
+            gameWon = false;
+            break;
+        }
+    }
+    if(gameWon){
+        return gameWon;
+    }
+    
+    if(crow===ccol){
+        gameWon = true;
+        for(let r=0;r<GRID_LENGTH;r++){
+            if(grid[r][r]!==playerValue){
+                gameWon = false;
+                break;
+            }
+        }
+        if(gameWon){
+            return gameWon;
+        }
+    }
+    
+    //console.log(crow+ccol+'-'+GRID_LENGTH-1);
+
+    if(crow+ccol===GRID_LENGTH-1){
+        gameWon = true;
+        for(let r=0;r<GRID_LENGTH;r++){
+            if(grid[r][GRID_LENGTH-1-r]!==playerValue){
+                gameWon = false;
+                break;
+            }
         }
     }
     return gameWon;
 }
 
-function gameOver(gameWon){
-    console.log(gameWon.turn);
+/**
+ * After game over removes event listeners from boxes and declares the winner
+ */
+function gameOver(){
+    console.log(turn);
     var boxes = document.getElementsByClassName("box");
-    //removeClickHandlers();
     for (var idx = 0; idx < boxes.length; idx++) {
         boxes[idx].removeEventListener('click', onBoxClick, false);
-        if(boxes[idx].textContent===gameWon.turn)
-        boxes[idx].style.backgroundColor= gameWon.turn === 'X' ? "green": "red";
+        if(boxes[idx].textContent===turn)
+        boxes[idx].style.backgroundColor= turn === 'X' ? "green": "red";
     }
-    winnerIs(gameWon.turn === 'X' ? "You won!": "You Lose!");
+    winnerIs(turn === 'X' ? "You won!": "You Lose!");
 }
 
-
+/**
+ * return spot/box location for next move
+ */
 function getBestBox(){
     let ids = null;
     for (let colIdx = 0;colIdx < GRID_LENGTH; colIdx++) {
@@ -176,11 +211,17 @@ function getBestBox(){
     return ids;
 }
 
+/**
+ * displays the winner in view
+ */
 function winnerIs(winner){
     document.querySelector(".result").style.display = "block";
     document.querySelector(".result .message").innerText = winner;
 }
-   
+
+/**
+ * checks if game has been tied or not
+ */
 function gameTie(){
     let isTied = true;
     for (let colIdx = 0;colIdx < GRID_LENGTH; colIdx++) {
@@ -202,6 +243,9 @@ function gameTie(){
     return isTied;
 }
 
+/**
+ * adds event listeners to boxes
+ */
 function addClickHandlers() {
     var boxes = document.getElementsByClassName("box");
     for (var idx = 0; idx < boxes.length; idx++) {
@@ -209,6 +253,9 @@ function addClickHandlers() {
     }
 }
 
+/**
+ * removes event listeners to boxes
+ */
 function removeClickHandlers(){
     var boxes = document.getElementsByClassName("box");
     for (var idx = 0; idx < boxes.length; idx++) {
